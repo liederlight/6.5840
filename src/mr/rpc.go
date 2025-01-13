@@ -9,6 +9,16 @@ package mr
 import "os"
 import "strconv"
 
+type TaskRequest struct {
+    WorkerId int
+}
+
+type TaskResponse struct {
+    TaskType string // "map", "reduce", or "exit"
+    TaskID   int    // Task ID
+    Filename string // File to process
+    NReduce  int    // Number of reduce tasks
+}
 //
 // example to show how to declare the arguments
 // and reply for an RPC.

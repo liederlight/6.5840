@@ -13,6 +13,10 @@ type Coordinator struct {
 }
 
 // Your code here -- RPC handlers for the worker to call.
+func AssignTask(args *TaskRequest, reply *TaskResponse) error {
+    // Your code here.
+    return nil
+}
 
 //
 // an example RPC handler.

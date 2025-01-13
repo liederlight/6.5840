@@ -2,3 +2,5 @@ pkg/
 api.key
 .api.key.trimmed
 *-handin.tar.gz
+.idea/6.5840.iml
+*.xml
