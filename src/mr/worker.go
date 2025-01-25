@@ -55,8 +55,6 @@ func Worker(mapf func(string, string) []KeyValue,
         }
 	)
 
-	// Your worker implementation here.
-
 	// uncomment to send the Example RPC to the coordinator.
 // 	CallExample()
 
@@ -103,7 +101,7 @@ func performMapTask(mapf func(string, string) []KeyValue, taskResponse TaskRespo
 
 func performReduceTask(reducef func(string, []string) string, task TaskResponse) {
 	// Collect intermediate key-value pairs from all map tasks
-	intermediate := make(map[string][]string) //a map of slices
+	intermediate := make(map[string][]string) //a map of slices, ex. m["fruits"] = []string{"apple", "banana", "cherry"}
 	for i := 0; i < task.NMap; i++ {
 		filename := fmt.Sprintf("mr-%d-%d", i, task.TaskID) // Format: "mr-X-Y"
 		file, err := os.Open(filename)
