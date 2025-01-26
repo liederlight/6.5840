@@ -5,6 +5,7 @@ import "net"
 import "os"
 import "net/rpc"
 import "net/http"
+import "sync"
 
 type TaskStatus int
 
@@ -33,7 +34,7 @@ type Coordinator struct {
 }
 
 // Your code here -- RPC handlers for the worker to call.
-func AssignTask(args *TaskRequest, reply *TaskResponse) error {
+func (c *Coordinator) AssignTask(args *TaskRequest, reply *TaskResponse) error {
     // Your code here.
     c.mu.Lock()
     defer c.mu.Unlock()
@@ -86,19 +87,21 @@ func (c *Coordinator) getIdleReduceTask() int {
     return -1
 }
 
-func (c *Coordinator) TaskCompleted(args *TaskCompleted, reply *TaskCompletedResponse) error {
+// In Go’s built-in net/rpc system, each RPC handler must follow this signature form:
+// func (receiver) MethodName(args *T, reply *U) error
+func (c *Coordinator) TaskCompleted(args *TaskCompleted, reply *struct{}) error {
     c.mu.Lock()
     defer c.mu.Unlock()
     if args.TaskType == "map" {
         c.mapTaskStatus[args.TaskID] = Completed
-        nRemainingMapTasks--
-        if nRemainingMapTasks == 0 {
+        c.nRemainingMapTasks--
+        if c.nRemainingMapTasks == 0 {
             c.mapDone = true
         }
     } else if args.TaskType == "reduce" {
         c.reduceTaskStatus[args.TaskID] = Completed
-        nRemainingReduceTasks--
-        if nRemainingReduceTasks == 0 {
+        c.nRemainingReduceTasks--
+        if c.nRemainingReduceTasks == 0 {
             c.reduceDone = true
         }
     }
@@ -162,5 +165,5 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 
 	c.server()
 	//todo: go c.monitorTimeouts()
-	return &creply.NMap
+	return &c
 }
