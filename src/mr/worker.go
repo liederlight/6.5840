@@ -31,7 +31,7 @@ func ihash(key string) int {
 func Worker(mapf func(string, string) []KeyValue,
 	reducef func(string, []string) string) {
 
-	for (
+	for {
 	    taskRequest := TaskRequest{}
 	    taskResponse := TaskResponse{}
 	    ok := call("Coordinator.AssignTask", &taskRequest, &taskResponse)
