@@ -5,42 +5,42 @@
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="sfC76M9ZS4Hi_MAeN-vg-0" value="Worker" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="190" y="160" width="260" height="200" as="geometry" />
+          <mxGeometry x="190" y="160" width="320" height="210" as="geometry" />
         </mxCell>
-        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-1" value="+ field: type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-0">
-          <mxGeometry y="26" width="260" height="26" as="geometry" />
+        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-1" value="+ KeyValue: struct" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-0">
+          <mxGeometry y="26" width="320" height="26" as="geometry" />
         </mxCell>
         <mxCell id="sfC76M9ZS4Hi_MAeN-vg-2" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-0">
-          <mxGeometry y="52" width="260" height="8" as="geometry" />
+          <mxGeometry y="52" width="320" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-3" value="- ihash(string): int&lt;div&gt;+ Worker(mapf, reducef): void&lt;/div&gt;&lt;div&gt;- performMapTask(mapf, TaskResponse)&lt;/div&gt;&lt;div&gt;- performReduceTask(reducef, TaskResponse)&lt;/div&gt;&lt;div&gt;+ call(string, TaskRequest, TaskResponse)&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-0">
-          <mxGeometry y="60" width="260" height="140" as="geometry" />
+        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-3" value="- ihash(string): int&lt;div&gt;+ Worker(mapf, reducef): void&lt;/div&gt;&lt;div&gt;- performMapTask(mapf, TaskResponse): void&lt;/div&gt;&lt;div&gt;&amp;nbsp; write map result(kv) into intermediate files&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; mr-taskID-nReduce&lt;/div&gt;&lt;div&gt;- performReduceTask(reducef, TaskResponse): void&lt;/div&gt;&lt;div&gt;&amp;nbsp; read from files, groupBy Key, apply reducef,&lt;/div&gt;&lt;div&gt;&amp;nbsp; write mr-out-taskID&lt;/div&gt;&lt;div&gt;+ call(string, TaskRequest, TaskResponse)&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-0">
+          <mxGeometry y="60" width="320" height="150" as="geometry" />
         </mxCell>
         <mxCell id="sfC76M9ZS4Hi_MAeN-vg-4" value="RPC" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="540" y="150" width="160" height="208" as="geometry" />
+          <mxGeometry x="540" y="160" width="260" height="200" as="geometry" />
         </mxCell>
-        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-5" value="+ TaskRequest: struct&lt;div&gt;+ TaskResponse: struct&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-4">
-          <mxGeometry y="26" width="160" height="44" as="geometry" />
+        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-5" value="+ TaskRequest: struct&lt;div&gt;+ TaskResponse: struct&lt;/div&gt;&lt;div&gt;+ TaskCompleted: struct&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-4">
+          <mxGeometry y="26" width="260" height="64" as="geometry" />
         </mxCell>
         <mxCell id="sfC76M9ZS4Hi_MAeN-vg-6" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-4">
-          <mxGeometry y="70" width="160" height="58" as="geometry" />
+          <mxGeometry y="90" width="260" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-7" value="+ method(type): type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-4">
-          <mxGeometry y="128" width="160" height="80" as="geometry" />
+        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-7" value="- coordinatorSock: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-4">
+          <mxGeometry y="148" width="260" height="52" as="geometry" />
         </mxCell>
         <mxCell id="sfC76M9ZS4Hi_MAeN-vg-8" value="Coordinator" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="730" y="120" width="210" height="150" as="geometry">
+          <mxGeometry x="840" y="160" width="230" height="288" as="geometry">
             <mxRectangle x="590" y="160" width="100" height="30" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-9" value="+ field: type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-8">
-          <mxGeometry y="26" width="210" height="26" as="geometry" />
+        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-9" value="+ TaskStatus: enum&lt;div&gt;+ Coordinator: struct&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-8">
+          <mxGeometry y="26" width="230" height="64" as="geometry" />
         </mxCell>
         <mxCell id="sfC76M9ZS4Hi_MAeN-vg-10" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-8">
-          <mxGeometry y="52" width="210" height="8" as="geometry" />
+          <mxGeometry y="90" width="230" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-11" value="+ AssignTask(TaskRequest, TaskResponse):" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-8">
-          <mxGeometry y="60" width="210" height="90" as="geometry" />
+        <mxCell id="sfC76M9ZS4Hi_MAeN-vg-11" value="+ AssignTask(TaskRequest, TaskResponse):void&lt;div&gt;- getIdleMapTask(): int&lt;/div&gt;&lt;div&gt;- getIdleReduceTask(): int&lt;/div&gt;&lt;div&gt;&lt;div&gt;- server()&lt;/div&gt;&lt;/div&gt;&lt;div&gt;+ Done():bool&lt;/div&gt;&lt;div&gt;+ MakeCoordinator([]string, nReduce)&amp;nbsp;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="sfC76M9ZS4Hi_MAeN-vg-8">
+          <mxGeometry y="98" width="230" height="190" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
