@@ -8,6 +8,7 @@ import (
     "net/rpc"
     "net/http"
     "sync"
+    "6.5840/logger"
 )
 
 type TaskStatus int
@@ -24,7 +25,7 @@ type Coordinator struct {
 	mapTasks   []string // List of files to process
 
     nReduce int
-    nMap int
+    nMap int // todo: Number of files to process
 
 	mapTaskStatus []TaskStatus
 	reduceTaskStatus []TaskStatus
@@ -41,12 +42,15 @@ func (c *Coordinator) AssignTask(args *TaskRequest, reply *TaskResponse) error {
     // Your code here.
     c.mu.Lock()
     defer c.mu.Unlock()
+    // If all map tasks are done, assign reduce tasks. Else, assign exit task before even assigning reduce tasks
     if !c.mapDone {
         taskID := c.getIdleMapTask()
         if taskID != -1 { // Found an idle map task
             reply.TaskType = "map"
             reply.TaskID = taskID
             reply.Filename = c.mapTasks[taskID]
+            message := fmt.Sprintf("[Coordinator] Assigning map task %d with file: %s to the worker ", taskID, c.mapTasks[taskID])
+            logger.LogWithFuncName(message)
             reply.NReduce = c.nReduce
             reply.NMap = c.nMap
             c.mapTaskStatus[taskID] = InProgress
@@ -55,6 +59,7 @@ func (c *Coordinator) AssignTask(args *TaskRequest, reply *TaskResponse) error {
             c.mapDone = true
         }
     }
+    // If all map tasks are done, assign reduce tasks. Else, assign exit task before even assigning reduce tasks
     if !c.reduceDone {
         taskID := c.getIdleReduceTask()
         if taskID != -1 { // Found an idle reduce task
@@ -108,6 +113,8 @@ func (c *Coordinator) TaskCompleted(args *TaskCompleted, reply *struct{}) error 
             c.reduceDone = true
         }
     }
+    message := fmt.Sprintf("[Coordinator] Task %d of type %s completed by worker %d", args.TaskID, args.TaskType, args.WorkerID)
+    logger.LogWithFuncName(message)
     return nil
 }
 //
@@ -144,7 +151,8 @@ func (c *Coordinator) server() {
 func (c *Coordinator) Done() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	log.Printf("Map Done: %v, Reduce Done: %v\n", c.mapDone, c.reduceDone)
+	message := fmt.Sprintf("[Coordinator] Checking if all tasks are done. Map Done: %v, Reduce Done: %v", c.mapDone, c.reduceDone)
+	logger.LogWithFuncName(message)
 	return c.mapDone && c.reduceDone
 }
 
@@ -167,10 +175,16 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c.nRemainingMapTasks = c.nMap
 	c.nRemainingReduceTasks = c.nReduce
 
+	for i := 0; i < c.nMap; i++ {
+        c.mapTaskStatus[i] = Idle
+    }
+    for i := 0; i < c.nReduce; i++ {
+        c.reduceTaskStatus[i] = Idle
+    }
+
 	fmt.Printf("Coordinator created as %+v\n", c)
 
 	c.server()
-	log.Printf("Coordinator server started\n")
 	//todo: go c.monitorTimeouts()
 	return &c
 }

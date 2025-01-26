@@ -8,7 +8,7 @@ import (
     "hash/fnv"
     "time"
     "encoding/json"
-    "path/filepath"
+    "6.5840/logger"
 )
 
 
@@ -36,14 +36,16 @@ func ihash(key string) int {
 //
 func Worker(mapf func(string, string) []KeyValue,
 	reducef func(string, []string) string) {
-
+	workerID := os.Getpid() // Fetch the unique process ID for this worker.
+	logger.LogWithFuncName(fmt.Sprintf("[Worker] Worker ID: %d", workerID))
 	for {
-	    taskRequest := TaskRequest{}
+	    taskRequest := TaskRequest{WorkerID: workerID}
 	    taskResponse := TaskResponse{}
+	    logger.LogWithFuncName("[Worker] Requesting task from the coordinator")
 	    ok := call("Coordinator.AssignTask", &taskRequest, &taskResponse)
         if ok {
-            fmt.Printf("Task received from coordinator: %+v\n", taskResponse)
-            //todo: Task received: {TaskType:reduce TaskID:7 Filename: NReduce:10 NMap:8}
+            message := fmt.Sprintf("[Worker] Task received from the coordinator: %+v", taskResponse)
+            logger.LogWithFuncName(message)
             //todo: filename empty
         } else {
             fmt.Println("Coordinator is unavailable")
@@ -77,8 +79,8 @@ func Worker(mapf func(string, string) []KeyValue,
 }
 
 func performMapTask(mapf func(string, string) []KeyValue, taskResponse TaskResponse) {
-    fmt.Println("Performing map task ", taskResponse.TaskID)
-    // Read input file content
+    message := fmt.Sprintf("[Worker] Performing map task %d", taskResponse.TaskID)
+    logger.LogWithFuncName(message)
     content, err := os.ReadFile(taskResponse.Filename)
     if err != nil {
     		log.Fatalf("Cannot read file %v: %v", taskResponse.Filename, err)
@@ -90,15 +92,13 @@ func performMapTask(mapf func(string, string) []KeyValue, taskResponse TaskRespo
     intermediateFiles := make([]*os.File, taskResponse.NReduce)
     encoders := make([]*json.Encoder, taskResponse.NReduce)
     for i := 0; i < taskResponse.NReduce; i++ {
-        filename := fmt.Sprintf("mr-%v-%v", taskResponse.TaskID, i)
+        filename := fmt.Sprintf("mr-%v-%v", taskResponse.TaskID, i)// "mr-<mapTaskID>-<reducePartition>"
         file, err := os.Create(filename)
         if err != nil {
             log.Fatalf("Cannot create empty intermediate file %v: %v", filename, err)
         }
         intermediateFiles[i] = file
         encoders[i] = json.NewEncoder(file)
-        absPath, err := filepath.Abs(filename)
-        log.Printf("Intermediate file created: %s", absPath)
     }
 
     // Partition intermediate key/value pairs into nReduce files
@@ -119,9 +119,11 @@ func performMapTask(mapf func(string, string) []KeyValue, taskResponse TaskRespo
 
 func performReduceTask(reducef func(string, []string) string, taskResponse TaskResponse) {
 	// Collect intermediate key-value pairs from all map tasks
+	message := fmt.Sprintf("[Worker] Performing reduce task %d", taskResponse.TaskID)
+    logger.LogWithFuncName(message)
 	intermediate := make(map[string][]string) //a map of slices, ex. m["fruits"] = []string{"apple", "banana", "cherry"}
 	for i := 0; i < taskResponse.NMap; i++ {
-		filename := fmt.Sprintf("mr-%d-%d", i, taskResponse.TaskID) // Format: "mr-X-Y"
+		filename := fmt.Sprintf("mr-%d-%d", i, taskResponse.TaskID) // "mr-<mapTaskID>-<reduceTaskID>"
 		file, err := os.Open(filename)
 		if err != nil {
 			log.Fatalf("Cannot open intermediate file %v: %v", filename, err)
@@ -138,7 +140,7 @@ func performReduceTask(reducef func(string, []string) string, taskResponse TaskR
 		file.Close()
 	}
 
-	// Create the final output file for this reduce task
+	// Create the final output file for this reduce task mr-out-<reduceTaskID>
 	oname := fmt.Sprintf("mr-out-%d", taskResponse.TaskID)
 	ofile, err := os.Create(oname)
 	if err != nil {
