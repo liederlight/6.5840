@@ -10,7 +10,7 @@ import "os"
 import "strconv"
 
 type TaskRequest struct {
-    WorkerId int
+    WorkerID int
 }
 
 type TaskResponse struct {
@@ -18,6 +18,13 @@ type TaskResponse struct {
     TaskID   int    // Task ID
     Filename string // File to process
     NReduce  int    // Number of reduce tasks
+    NMap     int    // Number of map tasks
+}
+
+type TaskCompleted struct {
+    TaskType string
+    TaskID   int
+    WorkerID int
 }
 //
 // example to show how to declare the arguments

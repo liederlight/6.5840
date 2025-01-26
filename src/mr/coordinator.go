@@ -1,11 +1,14 @@
 package mr
 
-import "log"
-import "net"
-import "os"
-import "net/rpc"
-import "net/http"
-import "sync"
+import (
+    "fmt"
+    "log"
+    "net"
+    "os"
+    "net/rpc"
+    "net/http"
+    "sync"
+)
 
 type TaskStatus int
 
@@ -18,7 +21,7 @@ const (
 type Coordinator struct {
 	// Your definitions here.
 	mu sync.Mutex
-	files   []string
+	mapTasks   []string // List of files to process
 
     nReduce int
     nMap int
@@ -43,7 +46,7 @@ func (c *Coordinator) AssignTask(args *TaskRequest, reply *TaskResponse) error {
         if taskID != -1 { // Found an idle map task
             reply.TaskType = "map"
             reply.TaskID = taskID
-            reply.Filename = c.files[taskID]
+            reply.Filename = c.mapTasks[taskID]
             reply.NReduce = c.nReduce
             reply.NMap = c.nMap
             c.mapTaskStatus[taskID] = InProgress
@@ -141,6 +144,7 @@ func (c *Coordinator) server() {
 func (c *Coordinator) Done() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	log.Printf("Map Done: %v, Reduce Done: %v\n", c.mapDone, c.reduceDone)
 	return c.mapDone && c.reduceDone
 }
 
@@ -153,7 +157,7 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := Coordinator{}
 
 	// Your code here.
-	c.files = files
+	c.mapTasks = files
 	c.nReduce = nReduce
 	c.nMap = len(files)
 	c.mapTaskStatus = make([]TaskStatus, c.nMap)
@@ -163,7 +167,10 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c.nRemainingMapTasks = c.nMap
 	c.nRemainingReduceTasks = c.nReduce
 
+	fmt.Printf("Coordinator created as %+v\n", c)
+
 	c.server()
+	log.Printf("Coordinator server started\n")
 	//todo: go c.monitorTimeouts()
 	return &c
 }
