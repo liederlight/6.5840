@@ -34,7 +34,7 @@ func Worker(mapf func(string, string) []KeyValue,
 	for (
 	    taskRequest := TaskRequest{}
 	    taskResponse := TaskResponse{}
-	    taskResponse := call("Coordinator.AssignTask", &taskRequest, &taskResponse)
+	    ok := call("Coordinator.AssignTask", &taskRequest, &taskResponse)
         if ok {
             fmt.Println("Task received:", taskResponse)
         } else {
@@ -53,10 +53,18 @@ func Worker(mapf func(string, string) []KeyValue,
             default:
                 time.Sleep(time.Second) // No tasks available, retry after 1 second
         }
-	)
+
+        // Notify coordinator of task completion
+        taskCompleted := TaskCompleted{
+            TaskType: taskResponse.TaskType,
+            TaskID:   taskResponse.TaskID,
+            WorkerID: taskRequest.WorkerID,
+        }
+        call("Coordinator.TaskCompleted", &taskCompleted, nil)
+	}
 
 	// uncomment to send the Example RPC to the coordinator.
-// 	CallExample()
+    // 	CallExample()
 
 }
 
