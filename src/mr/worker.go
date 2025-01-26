@@ -1,12 +1,15 @@
 package mr
 
-import "fmt"
-import "log"
-import "net/rpc"
-import "hash/fnv"
-import "time"
-import "os"
-import "encoding/json"
+import (
+    "fmt"
+    "log"
+    "os"
+    "net/rpc"
+    "hash/fnv"
+    "time"
+    "encoding/json"
+    "path/filepath"
+)
 
 
 //
@@ -39,7 +42,9 @@ func Worker(mapf func(string, string) []KeyValue,
 	    taskResponse := TaskResponse{}
 	    ok := call("Coordinator.AssignTask", &taskRequest, &taskResponse)
         if ok {
-            fmt.Println("Task received:", taskResponse)
+            fmt.Printf("Task received from coordinator: %+v\n", taskResponse)
+            //todo: Task received: {TaskType:reduce TaskID:7 Filename: NReduce:10 NMap:8}
+            //todo: filename empty
         } else {
             fmt.Println("Coordinator is unavailable")
             return
@@ -72,7 +77,7 @@ func Worker(mapf func(string, string) []KeyValue,
 }
 
 func performMapTask(mapf func(string, string) []KeyValue, taskResponse TaskResponse) {
-    fmt.Println("Performing map task", taskResponse.TaskID)
+    fmt.Println("Performing map task ", taskResponse.TaskID)
     // Read input file content
     content, err := os.ReadFile(taskResponse.Filename)
     if err != nil {
@@ -92,6 +97,8 @@ func performMapTask(mapf func(string, string) []KeyValue, taskResponse TaskRespo
         }
         intermediateFiles[i] = file
         encoders[i] = json.NewEncoder(file)
+        absPath, err := filepath.Abs(filename)
+        log.Printf("Intermediate file created: %s", absPath)
     }
 
     // Partition intermediate key/value pairs into nReduce files
