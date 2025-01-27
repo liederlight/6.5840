@@ -9,6 +9,7 @@ import (
     "net/http"
     "sync"
     "6.5840/logger"
+    "time"
 )
 
 type TaskStatus int
@@ -19,6 +20,11 @@ const (
     Completed
 )
 
+type TaskInfo struct {
+    Status    TaskStatus
+    StartTime time.Time
+}
+
 type Coordinator struct {
 	// Your definitions here.
 	mu sync.Mutex
@@ -27,14 +33,15 @@ type Coordinator struct {
     nReduce int
     nMap int // todo: Number of files to process
 
-	mapTaskStatus []TaskStatus
-	reduceTaskStatus []TaskStatus
+	mapTaskStatus []TaskInfo
+	reduceTaskStatus []TaskInfo
 
 	mapDone bool
 	reduceDone bool
 
 	nRemainingMapTasks int
 	nRemainingReduceTasks int
+	timeout            time.Duration
 }
 
 // Your code here -- RPC handlers for the worker to call.
@@ -49,11 +56,12 @@ func (c *Coordinator) AssignTask(args *TaskRequest, reply *TaskResponse) error {
             reply.TaskType = "map"
             reply.TaskID = taskID
             reply.Filename = c.mapTasks[taskID]
-            message := fmt.Sprintf("[Coordinator] Assigning map task %d with file: %s to the worker ", taskID, c.mapTasks[taskID])
-            logger.LogWithFuncName(message)
             reply.NReduce = c.nReduce
             reply.NMap = c.nMap
-            c.mapTaskStatus[taskID] = InProgress
+            c.mapTaskStatus[taskID].Status = InProgress
+            c.mapTaskStatus[taskID].StartTime = time.Now()
+            message := fmt.Sprintf("[Coordinator] Assigning map task %d with file: %s to the worker ", taskID, c.mapTasks[taskID])
+            logger.LogWithFuncName(message)
             return nil
         } else { // <-- 'else' must be on the same line as the closing brace of 'if'
             c.mapDone = true
@@ -67,7 +75,8 @@ func (c *Coordinator) AssignTask(args *TaskRequest, reply *TaskResponse) error {
             reply.TaskID = taskID
             reply.NReduce = c.nReduce
             reply.NMap = c.nMap
-            c.reduceTaskStatus[taskID] = InProgress
+            c.reduceTaskStatus[taskID].Status = InProgress
+            c.reduceTaskStatus[taskID].StartTime = time.Now()
             return nil
         } else {
             c.reduceDone = true
@@ -78,8 +87,12 @@ func (c *Coordinator) AssignTask(args *TaskRequest, reply *TaskResponse) error {
 }
 
 func (c *Coordinator) getIdleMapTask() int {
-    for i, status := range c.mapTaskStatus {
-        if status == Idle {
+    for i, info := range c.mapTaskStatus {
+        if info.Status == Idle {
+            return i
+        }
+        if info.Status == InProgress && time.Since(info.StartTime) > c.timeout {
+            logger.LogWithFuncName(fmt.Sprintf("[Coordinator] Map task %d has timed out", i))
             return i
         }
     }
@@ -87,8 +100,12 @@ func (c *Coordinator) getIdleMapTask() int {
 }
 
 func (c *Coordinator) getIdleReduceTask() int {
-    for i, status := range c.reduceTaskStatus {
-        if status == Idle {
+    for i, info := range c.reduceTaskStatus {
+        if info.Status == Idle {
+            return i
+        }
+        if info.Status == InProgress && time.Since(info.StartTime) > c.timeout {
+            logger.LogWithFuncName(fmt.Sprintf("[Coordinator] Reduce task %d has timed out", i))
             return i
         }
     }
@@ -101,13 +118,13 @@ func (c *Coordinator) TaskCompleted(args *TaskCompleted, reply *struct{}) error 
     c.mu.Lock()
     defer c.mu.Unlock()
     if args.TaskType == "map" {
-        c.mapTaskStatus[args.TaskID] = Completed
+        c.mapTaskStatus[args.TaskID].Status = Completed
         c.nRemainingMapTasks--
         if c.nRemainingMapTasks == 0 {
             c.mapDone = true
         }
     } else if args.TaskType == "reduce" {
-        c.reduceTaskStatus[args.TaskID] = Completed
+        c.reduceTaskStatus[args.TaskID].Status = Completed
         c.nRemainingReduceTasks--
         if c.nRemainingReduceTasks == 0 {
             c.reduceDone = true
@@ -153,6 +170,7 @@ func (c *Coordinator) Done() bool {
 	defer c.mu.Unlock()
 	message := fmt.Sprintf("[Coordinator] Checking if all tasks are done. Map Done: %v, Reduce Done: %v", c.mapDone, c.reduceDone)
 	logger.LogWithFuncName(message)
+// 	log.Printf("[Coordinator] Map Status: %v, Reduce Status: %v", c.mapTaskStatus, c.reduceTaskStatus)
 	return c.mapDone && c.reduceDone
 }
 
@@ -168,18 +186,18 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c.mapTasks = files
 	c.nReduce = nReduce
 	c.nMap = len(files)
-	c.mapTaskStatus = make([]TaskStatus, c.nMap)
-	c.reduceTaskStatus = make([]TaskStatus, c.nReduce)
+	c.mapTaskStatus = make([]TaskInfo, c.nMap)
+	c.reduceTaskStatus = make([]TaskInfo, c.nReduce)
 	c.mapDone = false
 	c.reduceDone = false
 	c.nRemainingMapTasks = c.nMap
 	c.nRemainingReduceTasks = c.nReduce
-
+	c.timeout = 10 * time.Second
 	for i := 0; i < c.nMap; i++ {
-        c.mapTaskStatus[i] = Idle
+        c.mapTaskStatus[i] = TaskInfo{Status: Idle, StartTime: time.Now()}
     }
     for i := 0; i < c.nReduce; i++ {
-        c.reduceTaskStatus[i] = Idle
+        c.reduceTaskStatus[i] = TaskInfo{Status: Idle, StartTime: time.Now()}
     }
 
 	fmt.Printf("Coordinator created as %+v\n", c)

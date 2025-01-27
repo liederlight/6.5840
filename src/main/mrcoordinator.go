@@ -9,6 +9,7 @@ package main
 // Please do not change this file.
 //
 
+// tood: If you want to see evidence that the data is actually sent “over the wire”
 import "6.5840/mr"
 import "time"
 import "os"

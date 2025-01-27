@@ -9,6 +9,7 @@ import (
     "time"
     "encoding/json"
     "6.5840/logger"
+    "sort"
 )
 
 
@@ -58,7 +59,7 @@ func Worker(mapf func(string, string) []KeyValue,
             case "reduce":
                 performReduceTask(reducef, taskResponse)
             case "exit":
-                log.Println("Worker exiting.")
+                log.Println("WorkerID: ", workerID, " exiting...")
                 return
             default:
                 time.Sleep(time.Second) // No tasks available, retry after 1 second
@@ -99,6 +100,7 @@ func performMapTask(mapf func(string, string) []KeyValue, taskResponse TaskRespo
         }
         intermediateFiles[i] = file
         encoders[i] = json.NewEncoder(file)
+        log.Printf("[Worker] Created intermediate file: %s", filename)
     }
 
     // Partition intermediate key/value pairs into nReduce files
@@ -139,6 +141,12 @@ func performReduceTask(reducef func(string, []string) string, taskResponse TaskR
 		}
 		file.Close()
 	}
+    // Extract keys from the map and sort them
+    keys := make([]string, 0, len(intermediate))
+    for key := range intermediate {
+        keys = append(keys, key)
+    }
+    sort.Strings(keys) // Sort keys
 
 	// Create the final output file for this reduce task mr-out-<reduceTaskID>
 	oname := fmt.Sprintf("mr-out-%d", taskResponse.TaskID)
@@ -148,11 +156,12 @@ func performReduceTask(reducef func(string, []string) string, taskResponse TaskR
 	}
 
 	// Apply the reduce function and write the result
-	for key, values := range intermediate {
-		output := reducef(key, values) // Merge values for each key
-		fmt.Fprintf(ofile, "%v %v\n", key, output) // Write in the required format
-	}
-	ofile.Close()
+    // Process keys in sorted order and write the results
+    for _, key := range keys {
+        output := reducef(key, intermediate[key]) // Reduce function
+        fmt.Fprintf(ofile, "%v %v\n", key, output) // Write in the required format
+    }
+    ofile.Close()
 }
 
 
