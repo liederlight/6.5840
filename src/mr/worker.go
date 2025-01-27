@@ -42,10 +42,10 @@ func Worker(mapf func(string, string) []KeyValue,
 	for {
 	    taskRequest := TaskRequest{WorkerID: workerID}
 	    taskResponse := TaskResponse{}
-	    logger.LogWithFuncName("[Worker] Requesting task from the coordinator")
+	    logger.LogWithFuncName(fmt.Sprintf("[Worker] Worker ID: %d Requesting task from the coordinator", workerID))
 	    ok := call("Coordinator.AssignTask", &taskRequest, &taskResponse)
         if ok {
-            message := fmt.Sprintf("[Worker] Task received from the coordinator: %+v", taskResponse)
+            message := fmt.Sprintf("[Worker] Worker ID: %d  Task received from the coordinator: %+v", workerID, taskResponse)
             logger.LogWithFuncName(message)
             //todo: filename empty
         } else {
